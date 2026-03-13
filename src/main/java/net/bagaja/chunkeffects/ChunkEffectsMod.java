@@ -102,10 +102,13 @@ public class ChunkEffectsMod {
         long chunkPos = getChunkKey(player);
 
         ChunkEffectData effectData = chunkEffects.computeIfAbsent(chunkPos, k -> {
-            List<Holder.Reference<MobEffect>> allEffects = new ArrayList<>();
-            BuiltInRegistries.MOB_EFFECT.holders().forEach(allEffects::add);
-            Holder<MobEffect> randomEffect    = allEffects.get(RANDOM.nextInt(allEffects.size()));
-            int               randomAmplifier = RANDOM.nextInt(MAX_AMPLIFIER + 1);
+            List<Holder<MobEffect>> allEffects = new ArrayList<>(
+                    BuiltInRegistries.MOB_EFFECT.stream()
+                            .map(BuiltInRegistries.MOB_EFFECT::wrapAsHolder)
+                            .toList()
+            );
+            Holder<MobEffect> randomEffect = allEffects.get(RANDOM.nextInt(allEffects.size()));
+            int randomAmplifier = RANDOM.nextInt(MAX_AMPLIFIER + 1);
             return new ChunkEffectData(randomEffect, randomAmplifier);
         });
 

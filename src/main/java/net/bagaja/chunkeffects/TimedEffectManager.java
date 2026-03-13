@@ -56,9 +56,11 @@ public class TimedEffectManager {
     }
 
     private void startNewCycle(Player player) {
-        // Changed: collect Holder<MobEffect> from the registry
-        List<Holder.Reference<MobEffect>> allEffects = new ArrayList<>();
-        BuiltInRegistries.MOB_EFFECT.holders().forEach(allEffects::add);
+        List<Holder<MobEffect>> allEffects = new ArrayList<>(
+                BuiltInRegistries.MOB_EFFECT.stream()
+                        .map(BuiltInRegistries.MOB_EFFECT::wrapAsHolder)
+                        .toList()
+        );
         currentEffect = allEffects.get(RANDOM.nextInt(allEffects.size()));
         currentAmplifier = RANDOM.nextInt(MAX_AMPLIFIER + 1);
 
