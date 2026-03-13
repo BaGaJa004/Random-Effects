@@ -12,6 +12,12 @@ public class ChunkEffectsState {
     /** Which mode is currently active. */
     public static ChunkEffectsMode currentMode = ChunkEffectsMode.CHUNK_CHAOS;
 
+    /**
+     * Cycle length for Timed-Chaos mode in ticks.
+     * Defaults to 5 minutes (6000 ticks). Configurable via the UI.
+     */
+    public static int cycleTicks = 6000;
+
     // ---------------------------------------------------------------
     // Timed-mode state (server-authoritative, synced to client)
     // ---------------------------------------------------------------
