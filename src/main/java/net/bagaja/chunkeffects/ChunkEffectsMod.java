@@ -1,12 +1,15 @@
 package net.bagaja.chunkeffects;
 
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -25,44 +28,42 @@ public class ChunkEffectsMod {
 
     public static final String MODID = "chunkeffects";
 
-    // ---------------------------------------------------------------
-    // Chunk-Chaos mode state
-    // ---------------------------------------------------------------
     private static final Map<Long, ChunkEffectData> chunkEffects = new HashMap<>();
     private static final Random RANDOM       = new Random();
     private static final int    MAX_AMPLIFIER = 4;
 
     private static class ChunkEffectData {
-        final MobEffect effect;
-        final int       amplifier;
-        ChunkEffectData(MobEffect effect, int amplifier) {
+        final Holder<MobEffect> effect;
+        final int               amplifier;
+        ChunkEffectData(Holder<MobEffect> effect, int amplifier) {
             this.effect    = effect;
             this.amplifier = amplifier;
         }
     }
 
-    // ---------------------------------------------------------------
-    // Timed-Chaos mode state  (one manager per player UUID)
-    // ---------------------------------------------------------------
     private static final Map<UUID, TimedEffectManager> timedManagers = new HashMap<>();
 
-    // ---------------------------------------------------------------
-    // Constructor
-    // ---------------------------------------------------------------
     public ChunkEffectsMod() {
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
     }
 
     // ---------------------------------------------------------------
-    // Keyboard shortcut — press G to open the config screen (client only)
+    // Client events — keybinding registration + input handling
     // ---------------------------------------------------------------
+    @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ClientModEvents {
+        // Registers the keybinding so it appears in Options → Controls
+        @SubscribeEvent
+        public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+            event.register(KeyBindings.OPEN_SCREEN);
+        }
+    }
+
     @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ClientEvents {
         @SubscribeEvent
         public static void onKeyInput(InputEvent.Key event) {
-            // G key opens the config screen (change GLFW.GLFW_KEY_G to any key you prefer)
-            if (event.getAction() == GLFW.GLFW_PRESS
-                    && event.getKey() == GLFW.GLFW_KEY_G
+            if (KeyBindings.OPEN_SCREEN.consumeClick()
                     && Minecraft.getInstance().screen == null) {
                 Minecraft.getInstance().setScreen(new ChunkEffectsScreen());
             }
@@ -70,17 +71,16 @@ public class ChunkEffectsMod {
     }
 
     // ---------------------------------------------------------------
-    // Server-side tick — runs for every player every tick
+    // Server-side tick
     // ---------------------------------------------------------------
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
         Player player = event.player;
-        if (player.level().isClientSide) return;       // server side only
+        if (player.level().isClientSide) return;
 
         if (!ChunkEffectsState.isModEnabled) {
-            // Mod disabled — make sure we clean up any lingering managers
             TimedEffectManager mgr = timedManagers.get(player.getUUID());
             if (mgr != null) mgr.reset(player);
             return;
@@ -92,11 +92,7 @@ public class ChunkEffectsMod {
         }
     }
 
-    // ---------------------------------------------------------------
-    // CHUNK-CHAOS: original behaviour — per-chunk random effect
-    // ---------------------------------------------------------------
     private void tickChunkChaos(Player player) {
-        // If the player just switched FROM timed mode, clean that up first
         TimedEffectManager mgr = timedManagers.get(player.getUUID());
         if (mgr != null) {
             mgr.reset(player);
@@ -106,16 +102,16 @@ public class ChunkEffectsMod {
         long chunkPos = getChunkKey(player);
 
         ChunkEffectData effectData = chunkEffects.computeIfAbsent(chunkPos, k -> {
-            List<MobEffect> allEffects = new ArrayList<>();
-            BuiltInRegistries.MOB_EFFECT.forEach(allEffects::add);
-            MobEffect randomEffect    = allEffects.get(RANDOM.nextInt(allEffects.size()));
-            int       randomAmplifier = RANDOM.nextInt(MAX_AMPLIFIER + 1);
+            List<Holder.Reference<MobEffect>> allEffects = new ArrayList<>();
+            BuiltInRegistries.MOB_EFFECT.holders().forEach(allEffects::add);
+            Holder<MobEffect> randomEffect    = allEffects.get(RANDOM.nextInt(allEffects.size()));
+            int               randomAmplifier = RANDOM.nextInt(MAX_AMPLIFIER + 1);
             return new ChunkEffectData(randomEffect, randomAmplifier);
         });
 
         player.addEffect(new MobEffectInstance(
                 effectData.effect,
-                40,                     // refreshed every tick
+                40,
                 effectData.amplifier,
                 false,
                 false,
@@ -123,18 +119,12 @@ public class ChunkEffectsMod {
         ));
     }
 
-    // ---------------------------------------------------------------
-    // TIMED-CHAOS: 5-minute cycle, random effect with random duration
-    // ---------------------------------------------------------------
     private void tickTimedChaos(Player player) {
         TimedEffectManager mgr = timedManagers.computeIfAbsent(
                 player.getUUID(), id -> new TimedEffectManager());
         mgr.tick(player);
     }
 
-    // ---------------------------------------------------------------
-    // Helper
-    // ---------------------------------------------------------------
     private long getChunkKey(Player player) {
         int chunkX = (int) player.getX() >> 4;
         int chunkZ = (int) player.getZ() >> 4;
