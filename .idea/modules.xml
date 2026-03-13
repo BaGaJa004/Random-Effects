@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/net.bagaja.random-effects.main.iml" filepath="$PROJECT_DIR$/.idea/modules/net.bagaja.random-effects.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/net.bagaja.random-effects.test.iml" filepath="$PROJECT_DIR$/.idea/modules/net.bagaja.random-effects.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/random-effects.main.iml" filepath="$PROJECT_DIR$/.idea/modules/random-effects.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/random-effects.test.iml" filepath="$PROJECT_DIR$/.idea/modules/random-effects.test.iml" />
     </modules>
