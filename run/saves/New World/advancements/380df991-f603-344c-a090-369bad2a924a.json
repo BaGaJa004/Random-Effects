@@ -286,12 +286,6 @@
     },
     "done": true
   },
-  "minecraft:recipes/redstone/sticky_piston": {
-    "criteria": {
-      "has_slime_ball": "2026-03-13 17:35:22 +0100"
-    },
-    "done": true
-  },
   "minecraft:adventure/kill_all_mobs": {
     "criteria": {
       "minecraft:silverfish": "2026-03-13 17:35:13 +0100",
@@ -299,15 +293,21 @@
     },
     "done": false
   },
-  "minecraft:recipes/redstone/slime_block": {
+  "minecraft:adventure/kill_a_mob": {
+    "criteria": {
+      "minecraft:silverfish": "2026-03-13 17:35:13 +0100"
+    },
+    "done": true
+  },
+  "minecraft:recipes/redstone/sticky_piston": {
     "criteria": {
       "has_slime_ball": "2026-03-13 17:35:22 +0100"
     },
     "done": true
   },
-  "minecraft:adventure/kill_a_mob": {
+  "minecraft:recipes/redstone/slime_block": {
     "criteria": {
-      "minecraft:silverfish": "2026-03-13 17:35:13 +0100"
+      "has_slime_ball": "2026-03-13 17:35:22 +0100"
     },
     "done": true
   },
@@ -317,5 +317,5 @@
     },
     "done": true
   },
-  "DataVersion": 3839
+  "DataVersion": 3955
 }
