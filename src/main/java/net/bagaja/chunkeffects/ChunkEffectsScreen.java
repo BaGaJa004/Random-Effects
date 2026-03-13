@@ -5,19 +5,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/**
- * Configuration screen for ChunkEffects.
- *
- * Design mirrors DropConfigScreen from the reference mod:
- *  - Centered button column
- *  - Temp-state toggle pattern (changes committed only on Save & Close)
- *  - Title rendered at y=40
- *  - isPauseScreen = true
- *
- * Cycle duration uses a  ◀  [value]  ▶  selector row — the same style
- * Minecraft's own options screens use — so it looks native and is clearly
- * a multi-option picker rather than a simple toggle.
- */
 public class ChunkEffectsScreen extends Screen {
 
     // Temp state held while the menu is open (committed on Save & Close)
@@ -160,6 +147,7 @@ public class ChunkEffectsScreen extends Screen {
         ChunkEffectsState.isModEnabled = tempEnabled;
         ChunkEffectsState.currentMode  = tempMode;
         ChunkEffectsState.cycleTicks   = CYCLE_OPTIONS[tempCycleIndex];
+        ChunkEffectsState.save();
     }
 
     // ---------------------------------------------------------------

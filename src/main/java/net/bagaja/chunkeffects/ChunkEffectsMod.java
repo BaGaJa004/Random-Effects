@@ -45,9 +45,6 @@ public class ChunkEffectsMod {
 
     private static final Map<UUID, TimedEffectManager> timedManagers = new HashMap<>();
 
-    // Delete both @Mod.EventBusSubscriber inner classes entirely,
-// and put this in your constructor instead:
-
     public ChunkEffectsMod(FMLJavaModLoadingContext context) {
         ChunkEffectsState.register(context);
 
@@ -55,9 +52,9 @@ public class ChunkEffectsMod {
         ModConfigEvent.Loading.getBus(modBusGroup).addListener(ChunkEffectsState::onConfigLoad);
         ModConfigEvent.Reloading.getBus(modBusGroup).addListener(ChunkEffectsState::onConfigReload);
 
-        // Keybinding registration (mod bus event)
-        RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(event ->
-                event.register(KeyBindings.OPEN_SCREEN));
+        RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(event -> {
+            event.register(KeyBindings.OPEN_SCREEN);
+        });
 
         // Key input (game bus event)
         InputEvent.Key.BUS.addListener(event -> {
@@ -74,11 +71,9 @@ public class ChunkEffectsMod {
     // ---------------------------------------------------------------
     // Server-side tick
     // ---------------------------------------------------------------
-    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-
-        Player player = event.player;
-        if (player.level().isClientSide) return;
+    public void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
+        Player player = event.player(); // record accessor, not a getter
+        if (player.level().isClientSide()) return;
 
         if (!ChunkEffectsState.isModEnabled) {
             TimedEffectManager mgr = timedManagers.get(player.getUUID());

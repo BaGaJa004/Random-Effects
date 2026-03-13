@@ -25,6 +25,10 @@ public class ChunkEffectsState {
             .comment("Whether the mod is enabled")
             .define("enabled", true);
 
+    private static final ForgeConfigSpec.IntValue CFG_CYCLE_TICKS = BUILDER
+            .comment("Cycle duration in ticks for TIMED_CHAOS mode")
+            .defineInRange("cycleTicks", 6000, 1200, 36000);
+
     private static final ForgeConfigSpec.EnumValue<ChunkEffectsMode> CFG_MODE = BUILDER
             .comment("The active mode: CHUNK_CHAOS or TIMED_CHAOS")
             .defineEnum("mode", ChunkEffectsMode.CHUNK_CHAOS);
@@ -52,12 +56,13 @@ public class ChunkEffectsState {
     public static void load() {
         isModEnabled = CFG_ENABLED.get();
         currentMode  = CFG_MODE.get();
+        cycleTicks   = CFG_CYCLE_TICKS.get();
     }
 
-    /** Persist the current static field values back to disk. */
     public static void save() {
         CFG_ENABLED.set(isModEnabled);
         CFG_MODE.set(currentMode);
+        CFG_CYCLE_TICKS.set(cycleTicks);
         SPEC.save();
     }
 
