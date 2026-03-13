@@ -11,11 +11,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,37 +45,35 @@ public class ChunkEffectsMod {
 
     private static final Map<UUID, TimedEffectManager> timedManagers = new HashMap<>();
 
-    public ChunkEffectsMod() {
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
-    }
+    // Delete both @Mod.EventBusSubscriber inner classes entirely,
+// and put this in your constructor instead:
 
-    // ---------------------------------------------------------------
-    // Client events — keybinding registration + input handling
-    // ---------------------------------------------------------------
-    @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static class ClientModEvents {
-        // Registers the keybinding so it appears in Options → Controls
-        @SubscribeEvent
-        public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
-            event.register(KeyBindings.OPEN_SCREEN);
-        }
-    }
+    public ChunkEffectsMod(FMLJavaModLoadingContext context) {
+        ChunkEffectsState.register(context);
 
-    @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
-    public static class ClientEvents {
-        @SubscribeEvent
-        public static void onKeyInput(InputEvent.Key event) {
+        var modBusGroup = context.getModBusGroup();
+        ModConfigEvent.Loading.getBus(modBusGroup).addListener(ChunkEffectsState::onConfigLoad);
+        ModConfigEvent.Reloading.getBus(modBusGroup).addListener(ChunkEffectsState::onConfigReload);
+
+        // Keybinding registration (mod bus event)
+        RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(event ->
+                event.register(KeyBindings.OPEN_SCREEN));
+
+        // Key input (game bus event)
+        InputEvent.Key.BUS.addListener(event -> {
             if (KeyBindings.OPEN_SCREEN.consumeClick()
                     && Minecraft.getInstance().screen == null) {
                 Minecraft.getInstance().setScreen(new ChunkEffectsScreen());
             }
-        }
+        });
+
+        // Player tick (game bus event)
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(this::onPlayerTick);
     }
 
     // ---------------------------------------------------------------
     // Server-side tick
     // ---------------------------------------------------------------
-    @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
